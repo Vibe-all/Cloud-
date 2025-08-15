@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Export port flask runs on 
-EXPOSE 5000 
+EXPOSE 50000 
 
 # Run the application 
 CMD ["python", "app.py"]
