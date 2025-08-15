@@ -11,7 +11,7 @@ stages{
      }
     stage('Build Docker image'){
         steps{
-            sh "docker build -t %IMAGE_NAME%:latest ."
+            sh "docker build -t ${IMAGE_NAME}:latest ."
         }
     }
     stage('Push to Dockerhub'){
