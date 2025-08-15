@@ -6,7 +6,7 @@ environment {
 stages{
      stage('Checkout'){
         steps{
-            git branch 'main', url: 'https://https://github.com/Vibe-all/Cloud-'
+            git branch 'main', url: 'https://github.com/Vibe-all/Cloud-'
         }
      }
     stage('Build Docker image'){
