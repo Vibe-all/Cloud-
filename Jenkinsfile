@@ -1,31 +1,48 @@
 pipeline {
     agent any
-environment {
-    IMAGE_NAME = 'Vibe-all/Cloud-'
-}
-stages{
-     stage('Checkout'){
-        steps{
-           git branch: 'main', url: 'https://github.com/Vibe-all/Cloud-'
+
+    environment {
+        AWS_DEFAULT_REGION = 'ap-south-1'   // your region
+        AWS_ACCOUNT_ID = '791608741441'     // replace with your account ID
+        ECR_REPO = 'flask-app'
+        IMAGE_TAG = "latest"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/youruser/flask-app.git'
+            }
         }
-     }
-    stage('Build Docker image'){
-        steps{
-            sh "docker build -t ${IMAGE_NAME}:latest ."
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${ECR_REPO}:${IMAGE_TAG}")
+                }
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-ecr-creds']]) {
+                    sh '''
+                        aws ecr get-login-password --region $AWS_DEFAULT_REGION \
+                        | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+                    '''
+                }
+            }
+        }
+
+        stage('Tag & Push to ECR') {
+            steps {
+                script {
+                    sh '''
+                        docker tag ${ECR_REPO}:${IMAGE_TAG} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}
+                        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}
+                    '''
+                }
+            }
         }
     }
-    stage('Push to Dockerhub'){
-        steps{
-            withCredentials([usernanmePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
-                sh """
-                echo %DOCKER_PASS% |
-                docker login -u %DOCKER_USER% --password-stdin
-                docker push %IMAGE_NAME%:latest
-                docker logout 
-                """
-            }
-        }
-        
-            }
-        }
 }
